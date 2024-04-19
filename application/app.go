@@ -12,8 +12,8 @@ import (
 
 type App struct {
 	router http.Handler
-	rdb    *redis.Client
 	config Config
+	rdb    *redis.Client
 }
 
 func New(config Config) *App {
