@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/notkisi/orders-api/order"
+	"github.com/notkisi/orders-api/handlers/order"
 )
 
 func (a *App) loadRoutes() {
