@@ -12,6 +12,7 @@ func (a *App) loadRoutes() {
 	router := chi.NewRouter()
 
 	router.Use(middleware.Heartbeat("/ping"))
+	router.Use(middleware.CleanPath)
 	router.Use(middleware.Logger)
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
