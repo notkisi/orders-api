@@ -10,7 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type OrderRepo struct {
+type RedisRepo struct {
 	DB *redis.Client
 }
 
@@ -19,7 +19,7 @@ func orderIDKey(id uint64) string {
 }
 
 // as these methods preform network requests they can fail, have error returned
-func (o *OrderRepo) Insert(ctx context.Context, order model.Order) error {
+func (o *RedisRepo) Insert(ctx context.Context, order model.Order) error {
 	data, err := json.Marshal(order)
 	if err != nil {
 		return fmt.Errorf("failed to encode order: %w", err)
@@ -56,7 +56,7 @@ func (o *OrderRepo) Insert(ctx context.Context, order model.Order) error {
 
 var ErrNotExist = errors.New("order does not exist")
 
-func (o *OrderRepo) FindByID(ctx context.Context, id uint64) (model.Order, error) {
+func (o *RedisRepo) FindByID(ctx context.Context, id uint64) (model.Order, error) {
 	key := orderIDKey(id)
 
 	value, err := o.DB.Get(ctx, key).Result()
@@ -66,6 +66,7 @@ func (o *OrderRepo) FindByID(ctx context.Context, id uint64) (model.Order, error
 		return model.Order{}, fmt.Errorf("get order: %w", err)
 	}
 
+	// its stored as a string, we are expected to return our type
 	var order model.Order
 	err = json.Unmarshal([]byte(value), &order)
 	if err != nil {
@@ -75,7 +76,7 @@ func (o *OrderRepo) FindByID(ctx context.Context, id uint64) (model.Order, error
 	return order, nil
 }
 
-func (o *OrderRepo) DeleteByID(ctx context.Context, id uint64) error {
+func (o *RedisRepo) DeleteByID(ctx context.Context, id uint64) error {
 	key := orderIDKey(id)
 
 	txn := o.DB.TxPipeline()
@@ -101,7 +102,7 @@ func (o *OrderRepo) DeleteByID(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (o *OrderRepo) Update(ctx context.Context, order model.Order) error {
+func (o *RedisRepo) Update(ctx context.Context, order model.Order) error {
 	data, err := json.Marshal(order)
 	if err != nil {
 		return fmt.Errorf("UPDATE failed to encode order: %w", err)
@@ -131,10 +132,12 @@ type FindResult struct {
 	Cursor uint64
 }
 
-func (o *OrderRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, error) {
+func (o *RedisRepo) FindAll(ctx context.Context, page FindAllPage) (FindResult, error) {
+	fmt.Println(page.Size, page.Offset)
 	res := o.DB.SScan(ctx, "orders", page.Offset, "*", int64(page.Size))
 
 	keys, cursor, err := res.Result()
+
 	if err != nil {
 		return FindResult{}, fmt.Errorf("failed to get order ids: %w", err)
 	}
