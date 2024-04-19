@@ -22,11 +22,12 @@ type Repo interface {
 	FindAll(ctx context.Context, page FindAllPage) (FindResult, error)
 }
 
-type OrderRepo struct {
+// OrderHandler type implements the handlers to be served
+type OrderHandler struct {
 	Repo Repo
 }
 
-func (h *OrderRepo) Create(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		CustomerID uuid.UUID  `json:"customer_id"`
 		LineItems  []LineItem `json:"line_items"`
@@ -64,7 +65,7 @@ func (h *OrderRepo) Create(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (h *OrderRepo) List(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) List(w http.ResponseWriter, r *http.Request) {
 	// we expect user to pass cursor in their
 	cursorStr := r.URL.Query().Get("cursor")
 	// set to default if not provided
@@ -110,7 +111,7 @@ func (h *OrderRepo) List(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *OrderRepo) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	orderID, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
@@ -138,7 +139,7 @@ func (h *OrderRepo) GetById(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *OrderRepo) UpdateByID(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) UpdateByID(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Status string `json:"status"`
 	}
@@ -203,7 +204,7 @@ func (h *OrderRepo) UpdateByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *OrderRepo) DeleteByID(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	orderID, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
